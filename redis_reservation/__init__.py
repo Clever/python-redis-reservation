@@ -7,8 +7,6 @@ import socket
 import time
 import os
 
-__version__ = '0.0.1'
-
 
 class ReserveException(Exception):
   pass
@@ -17,7 +15,7 @@ class ReserveException(Exception):
 class ReserveResource:
     
   def __init__(self, redis, key, by, lock_ttl=30*60, heartbeat_interval=10*60):
-    self.key = key
+    self.key = 'reservation-{}'.format(key)
     self.val = '{}-{}-{}'.format(socket.gethostname(), by, os.getpid())
     self.lock_ttl = lock_ttl
     self.heartbeat_interval = heartbeat_interval
