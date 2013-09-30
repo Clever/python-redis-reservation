@@ -32,9 +32,11 @@ class ReserveResource:
       else:
         lock = self.reserve()
         if lock is True:
+          self.logger.info("RESERVE: successfully reserved {}".format(self.key))
           yield True
         else:
-          self.logger.info("Lock already reserved by {}".format(self.redis.get(self.key)))
+          self.logger.info("RESERVE: System {} already reserved by {}"
+                  .format(self.key, self.redis.get(self.key)))
           yield False
     except RedisError as err:
       self.logger.error("RESERVE_ERROR: RedisError during reserve/run of with ReserveResource.lock")
