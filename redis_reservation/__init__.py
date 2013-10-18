@@ -50,10 +50,9 @@ class ReserveResource:
                 "of with ReserveResource.lock", err)
 
   def reserve(self):
-    result = self.redis.setnx(self.key, self.val)
+    result = self.redis.set(self.key, self.val, nx=True, ex=self.lock_ttl)
     if result is 1 or result is True:
       self.reserved = True
-      self._set_expiration()
       self._heartbeat()  # setup heartbeat
       return True  # aquired lock
     return False
@@ -68,13 +67,15 @@ class ReserveResource:
 
   def release(self):
     if self.heartbeat_thread:
-      # cancel heartbeat thread waits for finsih
+      # cancel heartbeat thread after waiting for execution finish (if any)
       self.heartbeat_thread.cancel()
 
     if self.reserved is False:
       return True 
 
     result = self.redis.delete(self.key)
+    self.reserved = False
+
     if result is 1 or result is True:
       return True
     return False  # lock already gone
@@ -85,8 +86,11 @@ class ReserveResource:
     return False
   
   def _heartbeat(self):
+    if self.reserved is False:
+      return
     if not (self.heartbeat_interval and self.heartbeat_interval > 0):
       return
+    
     self._set_expiration()
     self.heartbeat_thread = Timer(self.heartbeat_interval, self._heartbeat, ())
     self.heartbeat_thread.daemon = True  # don't keep app alive just for this thread
