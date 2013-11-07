@@ -39,14 +39,14 @@ class ReserveResource:
                   .format(self.key, self.redis.get(self.key)))
           yield False
     except RedisError as err:
-      self.logger.error("RESERVE_ERROR: RedisError during reserve/run of with ReserveResource.lock")
+      self.logger.error("RESERVE_ERROR: RedisError during RESERVE/RUN of with ReserveResource.lock")
       self.logger.error(err)
       yield err
     finally:
       try:
         self.release()
       except RedisError as err:
-        self.logger.error("RESERVE_ERROR: RedisError during reserve/run "
+        self.logger.error("RESERVE_ERROR: RedisError during RELEASE "
                 "of with ReserveResource.lock", err)
 
   def reserve(self):
