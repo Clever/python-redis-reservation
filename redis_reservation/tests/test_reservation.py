@@ -46,7 +46,7 @@ class ReserveResourceTests(unittest.TestCase):
 
     key = 'test_resource'
     class FailingRedis:
-      def setnx(self, *args, **kwargs):
+      def set(self, *args, **kwargs):
         raise redis_lib.RedisError("its in the name to fail")
     reserve = ReserveResource(self.redis, key, 'test_worker')
     reserve.redis = FailingRedis()
