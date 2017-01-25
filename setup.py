@@ -22,7 +22,7 @@ setup(name='redis_reservation',
       author='Clever (https://getclever.com)',
       author_email='tech-notify@getclever.com',
       url='http://github.com/Clever/python-redis-reservation',
-      license='BSD',
+      license='Apache License 2.0',
       packages=find_packages(exclude=['*.tests']),
       setup_requires=[
           'nose>=1.0'
