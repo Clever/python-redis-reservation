@@ -19,9 +19,9 @@ except:
 setup(name='redis_reservation',
       version=__version__, description='Resource reservation (locking) libraries using a Redis backend, with customizable timeouts and keep-alive support.',
       long_description=README + '\n\n' + CHANGES,
-      author='Clever (https://getclever.com)',
-      author_email='tech-notify@getclever.com',
-      url='http://github.com/Clever/python-redis-reservation',
+      author='Clever (https://clever.com)',
+      author_email='tech-notify@clever.com',
+      url='https://github.com/Clever/python-redis-reservation',
       license='Apache License 2.0',
       packages=find_packages(exclude=['*.tests']),
       setup_requires=[
