@@ -16,7 +16,10 @@ class ReserveResource:
     
   def __init__(self, redis, key, by, lock_ttl=30*60, heartbeat_interval=10*60):
     self.key = 'reservation-{}'.format(key)
-    self.val = '{}-{}-{}'.format(socket.gethostname(), by, os.getpid())
+    id = os.getenv("JOB_ID")
+    if id is None:
+      id = os.getpid()
+    self.val = '{}-{}-{}'.format(socket.gethostname(), by, id)
     self.lock_ttl = lock_ttl
     self.heartbeat_interval = heartbeat_interval
     self.redis = redis
