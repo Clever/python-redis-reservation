@@ -6,6 +6,7 @@ import logging
 import socket
 import time
 import os
+import signal
 
 
 class ReserveException(Exception):
@@ -23,6 +24,15 @@ class ReserveResource:
     self.reserved = False
     self.logger = logging.getLogger(by)  # log with the name of the reserver
     self.heartbeat_thread = None
+    self.previous_sigterm_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
+
+  def sigterm_handler(self, signum, frame):
+    try:
+      self.logger.info("RESERVE: caught sigterm, releasing reservation")
+      self.release()
+    finally:
+      if self.previous_sigterm_handler != signal.SIG_DFL and self.previous_sigterm_handler != None:
+        self.previous_sigterm_handler(signum, frame)
 
   @contextmanager
   def lock(self, wait=False):
