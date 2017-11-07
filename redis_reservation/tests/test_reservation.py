@@ -103,13 +103,19 @@ class TestSignalHandling(unittest.TestCase):
     self.redis = redis_lib.StrictRedis()
     self.key_format = 'reservation-{}'
     self.exited_context = False
+    self.called_previous_sigterm_handler = False
   def tearDown(self):
-    # make sure we exited the ctx manager
+    # make sure we exited the ctx manager and called previous signal handler
     self.assertTrue(self.exited_context is True)
+    self.assertTrue(self.called_previous_sigterm_handler is True)
+
+  def my_awesome_sigterm_handler(self, signum, frame):
+    self.called_previous_sigterm_handler = True
 
   def test_sigterm(self):
     key = 'test_resource'
     redis_key = self.key_format.format(key)
+    signal.signal(signal.SIGTERM, self.my_awesome_sigterm_handler)
 
     reserve = ReserveResource(self.redis, key, 'test_worker')
     self.assertIsNone(self.redis.get(redis_key))
