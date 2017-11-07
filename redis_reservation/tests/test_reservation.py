@@ -4,6 +4,7 @@ import time
 from threading import Timer
 import redis as redis_lib
 from redis_reservation import *
+import signal
 
 
 class ReserveResourceTests(unittest.TestCase):
@@ -96,6 +97,32 @@ class ReserveResourceTests(unittest.TestCase):
                        self.redis.get(redis_key))
     self.assertIsNone(self.redis.get(redis_key))
 
+
+class TestSignalHandling(unittest.TestCase):
+  def setUp(self):
+    self.redis = redis_lib.StrictRedis()
+    self.key_format = 'reservation-{}'
+    self.exited_context = False
+    self.called_previous_sigterm_handler = False
+  def tearDown(self):
+    # make sure we exited the ctx manager and called previous signal handler
+    self.assertTrue(self.exited_context is True)
+    self.assertTrue(self.called_previous_sigterm_handler is True)
+
+  def my_awesome_sigterm_handler(self, signum, frame):
+    self.called_previous_sigterm_handler = True
+
+  def test_sigterm(self):
+    key = 'test_resource'
+    redis_key = self.key_format.format(key)
+    signal.signal(signal.SIGTERM, self.my_awesome_sigterm_handler)
+
+    reserve = ReserveResource(self.redis, key, 'test_worker')
+    self.assertIsNone(self.redis.get(redis_key))
+    with reserve.lock() as lock_status:
+      os.kill(os.getpid(), signal.SIGTERM)
+    self.exited_context = True
+    self.assertIsNone(self.redis.get(redis_key))
 
 if __name__ == '__main__':
   unittest.main()
