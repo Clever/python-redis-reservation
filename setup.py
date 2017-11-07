@@ -2,6 +2,9 @@
 
 import os
 from setuptools import setup, find_packages
+from pip.req import parse_requirements
+
+import pkg_resources
 
 __version__ = '0.1.1'
 
@@ -16,6 +19,17 @@ except:
     README = ''
     CHANGES = ''
 
+pr_kwargs = {}
+if pkg_resources.get_distribution("pip").version >= '6.0':
+  pr_kwargs = {"session": False}
+
+install_reqs = parse_requirements(
+    os.path.join(
+        here,
+        './requirements.txt'
+    ), **pr_kwargs)
+  
+
 setup(name='redis_reservation',
       version=__version__, description='Resource reservation (locking) libraries using a Redis backend, with customizable timeouts and keep-alive support.',
       long_description=README + '\n\n' + CHANGES,
@@ -24,12 +38,8 @@ setup(name='redis_reservation',
       url='https://github.com/Clever/python-redis-reservation',
       license='Apache License 2.0',
       packages=find_packages(exclude=['*.tests']),
-      setup_requires=[
-          'nose>=1.0'
-      ],
-      install_requires=[
-          'redis==2.8.0'
-      ],
+      install_requires=[str(ir.req) for ir in install_reqs],
+      setup_requires=['nose>=1.0'],
       test_suite='redis_reservation.tests',
       entry_points={
       },

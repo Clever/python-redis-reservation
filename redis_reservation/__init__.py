@@ -7,6 +7,7 @@ import socket
 import time
 import os
 import signal
+import kayvee.logger as logger
 
 
 class ReserveException(Exception):
@@ -15,20 +16,20 @@ class ReserveException(Exception):
 
 class ReserveResource:
     
-  def __init__(self, redis, key, by, lock_ttl=30*60, heartbeat_interval=10*60):
+  def __init__(self, redis, key, by, kvlogger=logger.Logger("redis-reservation"), lock_ttl=30*60, heartbeat_interval=10*60):
     self.key = 'reservation-{}'.format(key)
     self.val = '{}-{}-{}'.format(socket.gethostname(), by, os.getpid())
     self.lock_ttl = lock_ttl
     self.heartbeat_interval = heartbeat_interval
     self.redis = redis
     self.reserved = False
-    self.logger = logging.getLogger(by)  # log with the name of the reserver
+    self.logger = kvlogger
     self.heartbeat_thread = None
     self.previous_sigterm_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
 
   def sigterm_handler(self, signum, frame):
     try:
-      self.logger.info("RESERVE: caught sigterm, releasing reservation")
+      self.logger.info("reservation-release-on-sigterm")
       self.release()
     finally:
       if self.previous_sigterm_handler != signal.SIG_DFL and self.previous_sigterm_handler != None:
@@ -42,22 +43,19 @@ class ReserveResource:
       else:
         lock = self.reserve()
         if lock is True:
-          self.logger.info("RESERVE: successfully reserved {}".format(self.key))
+          self.logger.info("reserved", dict(key=self.key))
           yield True
         else:
-          self.logger.info("RESERVE: System {} already reserved by {}"
-                  .format(self.key, self.redis.get(self.key)))
+          self.logger.info("already-reserved", dict(key=self.key, by=self.redis.get(self.key)))
           yield False
     except RedisError as err:
-      self.logger.error("RESERVE_ERROR: RedisError during RESERVE/RUN of with ReserveResource.lock")
-      self.logger.error(err)
+      self.logger.error("redis-error", dict(err=repr(err)))
       yield err
     finally:
       try:
         self.release()
       except RedisError as err:
-        self.logger.error("RESERVE_ERROR: RedisError during RELEASE "
-                "of with ReserveResource.lock", err)
+        self.logger.error("redis-error", dict(err=repr(err)))
 
   def reserve(self):
     result = self.redis.set(self.key, self.val, nx=True, ex=self.lock_ttl)
