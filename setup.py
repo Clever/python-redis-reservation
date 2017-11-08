@@ -6,7 +6,7 @@ from pip.req import parse_requirements
 
 import pkg_resources
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 here = os.path.abspath(os.path.dirname(__file__))
 
