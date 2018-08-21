@@ -16,4 +16,5 @@ jobs:
     - run:
         command: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
         name: Set up CircleCI artifacts directories
-    - run: python setup.py develop && python setup.py test
+    - run: sudo python setup.py develop
+    - run: sudo python setup.py test
