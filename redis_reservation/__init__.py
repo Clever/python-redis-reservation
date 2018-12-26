@@ -31,6 +31,7 @@ class ReserveResource:
     try:
       self.logger.info("reservation-release-on-sigterm")
       self.release()
+      self.logger.info("reservation-released-on-sigterm")
     finally:
       if self.previous_sigterm_handler != signal.SIG_DFL and self.previous_sigterm_handler != None:
         self.previous_sigterm_handler(signum, frame)
@@ -76,12 +77,17 @@ class ReserveResource:
   def release(self):
     if self.heartbeat_thread:
       # cancel heartbeat thread after waiting for execution finish (if any)
+      self.logger.info("canceling-heartbeat-thread")
       self.heartbeat_thread.cancel()
+      self.logger.info("canceled-heartbeat-thread")
 
     if self.reserved is False:
-      return True 
+      self.logger.info("not-reserved")
+      return True
 
+    self.logger.info("deleting-redis-key")
     result = self.redis.delete(self.key)
+    self.logger.info("deleted-redis-key")
     self.reserved = False
 
     if result is 1 or result is True:
