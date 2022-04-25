@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
+from builtins import str
 import os
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
+try:  # for pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError:  # for pip <= 9.0.3
+    from pip.req import parse_requirements
 
 import pkg_resources
 
-__version__ = '0.3.1'
+__version__ = '1.0.0'
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,9 +23,8 @@ except:
     README = ''
     CHANGES = ''
 
-pr_kwargs = {}
-if pkg_resources.get_distribution("pip").version >= '6.0':
-  pr_kwargs = {"session": False}
+
+pr_kwargs = {"session": False}
 
 install_reqs = parse_requirements(
     os.path.join(
@@ -38,7 +41,7 @@ setup(name='redis_reservation',
       url='https://github.com/Clever/python-redis-reservation',
       license='Apache License 2.0',
       packages=find_packages(exclude=['*.tests']),
-      install_requires=[str(ir.req) for ir in install_reqs],
+      install_requires=[str(ir.requirement) for ir in install_reqs],
       setup_requires=['nose>=1.0'],
       test_suite='redis_reservation.tests',
       entry_points={

@@ -1,3 +1,4 @@
+from builtins import object
 import unittest
 import socket
 import time
@@ -25,7 +26,7 @@ class ReserveResourceTests(unittest.TestCase):
       self.assertEqual('{}-{}-{}'.format(socket.gethostname(),
                                          'test_worker',
                                          os.getpid()),
-                       self.redis.get(redis_key))
+                       self.redis.get(redis_key).decode('utf-8'))
     self.assertIsNone(self.redis.get(redis_key))
      
   def test_lock_fail(self):
@@ -35,25 +36,25 @@ class ReserveResourceTests(unittest.TestCase):
     redis_key = self.key_format.format(key)
 
     self.redis.set(redis_key, 'MOCK')
-    self.assertEqual('MOCK', self.redis.get(redis_key))
+    self.assertEqual('MOCK', self.redis.get(redis_key).decode('utf-8'))
     reserve = ReserveResource(self.redis, key, 'test_worker')
     with reserve.lock() as resource_lock:
       self.assertFalse(resource_lock, "reserved lock, while locked by someone else")
-    self.assertEqual('MOCK', self.redis.get(redis_key))
+    self.assertEqual('MOCK', self.redis.get(redis_key).decode('utf-8'))
     self.redis.delete(redis_key)
 
   def test_lock_err(self):
     """ contextmanager handles redis errors """
 
     key = 'test_resource'
-    class FailingRedis:
+    class FailingRedis(object):
       def set(self, *args, **kwargs):
         raise redis_lib.RedisError("its in the name to fail")
     reserve = ReserveResource(self.redis, key, 'test_worker')
     reserve.redis = FailingRedis()
 
     with reserve.lock() as resource_lock:
-      self.assertEqual(resource_lock.message, "its in the name to fail")
+      self.assertEqual(str(resource_lock), "its in the name to fail")
   
   def test_lock_release_on_err(self):
     """ contextmanager releases locks on error in with block """
@@ -67,10 +68,10 @@ class ReserveResourceTests(unittest.TestCase):
         self.assertEqual('{}-{}-{}'.format(socket.gethostname(),
                                            'test_worker',
                                            os.getpid()),
-                         self.redis.get(redis_key))
+                         self.redis.get(redis_key).decode('utf-8'))
         raise Exception("error within with")
     except Exception as e:
-      self.assertEqual(e.message, 'error within with')
+      self.assertEqual(str(e), 'error within with')
       self.assertFalse(self.redis.get(redis_key))
 
   def test_lock_wait(self):
@@ -86,7 +87,7 @@ class ReserveResourceTests(unittest.TestCase):
 
     reserve = ReserveResource(self.redis, key, 'test_worker')
     reserve.heartbeat_interval = 0.2
-    self.assertEqual('MOCK', self.redis.get(redis_key))
+    self.assertEqual('MOCK', self.redis.get(redis_key).decode('utf-8'))
 
     with reserve.lock(wait=True) as lock_status:
       time.sleep(1)  # wait a little bit for the heartbeat to run
@@ -94,7 +95,7 @@ class ReserveResourceTests(unittest.TestCase):
       self.assertEqual('{}-{}-{}'.format(socket.gethostname(),
                                          'test_worker',
                                          os.getpid()),
-                       self.redis.get(redis_key))
+                       self.redis.get(redis_key).decode('utf-8'))
     self.assertIsNone(self.redis.get(redis_key))
 
 

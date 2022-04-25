@@ -1,3 +1,4 @@
+from builtins import object
 from contextlib import contextmanager
 from threading import Timer
 import threading
@@ -14,7 +15,7 @@ class ReserveException(Exception):
   pass
 
 
-class ReserveResource:
+class ReserveResource(object):
     
   def __init__(self, redis, key, by, kvlogger=logger.Logger("redis-reservation"), lock_ttl=30*60, heartbeat_interval=10*60):
     self.key = 'reservation-{}'.format(key)
@@ -47,7 +48,7 @@ class ReserveResource:
           self.logger.info("reserved", dict(key=self.key))
           yield True
         else:
-          self.logger.info("already-reserved", dict(key=self.key, by=self.redis.get(self.key)))
+          self.logger.info("already-reserved", dict(key=self.key, by=self.redis.get(self.key).decode('utf-8')))
           yield False
     except RedisError as err:
       self.logger.error("redis-error", dict(err=repr(err)))
