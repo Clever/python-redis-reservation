@@ -3,19 +3,19 @@ jobs:
   build:
     working_directory: ~/Clever/python-redis-reservation
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-    - image: redis
+    - image: cimg/python:3.9.12
+    - image: cimg/redis:6.2.6
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     steps:
+    - run: pip3 install --force-reinstall pip==22.0.4
     - run:
         command: cd $HOME && git clone --depth 1 -v https://github.com/Clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
         name: Clone ci-scripts
     - checkout
-    - setup_remote_docker
     - run:
         command: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
         name: Set up CircleCI artifacts directories
-    - run: sudo python setup.py develop
-    - run: sudo python setup.py test
+    - run: python3 setup.py develop
+    - run: python3 setup.py test
