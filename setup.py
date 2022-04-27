@@ -10,7 +10,7 @@ except ImportError:  # for pip <= 9.0.3
 
 import pkg_resources
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 here = os.path.abspath(os.path.dirname(__file__))
 
